@@ -336,11 +336,106 @@ def plot_stacked_bar(
     ax1.grid(True)
     plt.tight_layout()
     plt.show()
+
+import pandas as pd
+import numpy as np
+
+def population_stability_index(
+    reference_df: pd.DataFrame, 
+    monitored_df: pd.DataFrame,
+    reference_prob: str,
+    monitored_prob: str,
+    epsilon: float = 1e-10
+) -> pd.DataFrame:
+    """
+    Calculates the Population Stability Index (PSI) between two samples.
+    Em português Indice de Estabilidade Populacional (IEP).
+
+
+    Args:
+        reference_df (pd.DataFrame): DataFrame containing the reference sample.
+        monitored_df (pd.DataFrame): DataFrame containing the monitored sample.
+        reference_prob (str): Column name for probabilities in the reference sample.
+        monitored_prob (str): Column name for probabilities in the monitored sample.
+        epsilon (float): Pequeno valor adicionado para evitar log(0).
+
+    Returns:
+        Tuple[pd.DataFrame, float]: DataFrame with PSI calculations for each bin and the total PSI value.
+        
+    Reference values:
+    PSI < 0.1 — No change. You can continue using existing model.
+    PSI >=0.1 and PSI< 0.25 — Slight change is required.
+    PSI >=0.25 — Significant change is required. Ideally, you should not use this model anymore, retraining is required.
+    
+    Reference: https://www.listendata.com/2015/05/population-stability-index.html
+    Reference: https://medium.com/@parthaps77/population-stability-index-psi-and-characteristic-stability-index-csi-in-machine-learning-6312bc52159d
+    """
+    
+    # Define the probability range intervals
+    bins = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    labels = [
+        '[0-0.1]', '(0.1-0.2]', '(0.2-0.3]', '(0.3-0.4]', '(0.4-0.5]', 
+        '(0.5-0.6]', '(0.6-0.7]', '(0.7-0.8]', '(0.8-0.9]', '(0.9-1.0]'
+    ]
+    
+    # Create DataFrames to hold the counts
+    reference_df['Reference_Range'] = pd.cut(reference_df[reference_prob], bins=bins, labels=labels, include_lowest=True, right=True)
+    reference_group = reference_df['Reference_Range'].value_counts().reset_index()
+    reference_group.columns = ['Reference_Range', 'Reference_Count']
+    reference_group = reference_group.sort_values(by='Reference_Range')
+    reference_group['Reference_Perc'] = reference_group['Reference_Count'] / reference_df.shape[0] + epsilon
+
+    monitored_df['Monitored_Range'] = pd.cut(monitored_df[monitored_prob], bins=bins, labels=labels, include_lowest=True, right=True)
+    monitored_group = monitored_df['Monitored_Range'].value_counts().reset_index()
+    monitored_group.columns = ['Monitored_Range', 'Monitored_Count']
+    monitored_group = monitored_group.sort_values(by='Monitored_Range')
+    monitored_group['Monitored_Perc'] = monitored_group['Monitored_Count'] / monitored_df.shape[0] + epsilon
+
+    # Calculate the PSI for each bin
+    df_psi = pd.merge(reference_group, monitored_group, left_on='Reference_Range', right_on='Monitored_Range')
+    df_psi.rename(columns={'Reference_Range': 'Range'}, inplace=True)
+    df_psi.drop(columns=['Monitored_Range'], inplace=True)
+    df_psi['PSI'] = (df_psi['Monitored_Perc'] - df_psi['Reference_Perc']) * np.log(df_psi['Monitored_Perc'] / df_psi['Reference_Perc'])
+    df_psi['PSI'] = df_psi['PSI'].round(8)
+    psi_value = df_psi['PSI'].sum().round(8)
+    
+    return df_psi, psi_value
+
+import pandas as pd
+from typing import List
+
+def characteristic_stability_index(
+    reference_df: pd.DataFrame, 
+    monitored_df: pd.DataFrame, 
+    feature_columns: List[str]
+) -> pd.DataFrame:
+    """
+    Calculates the Characteristic Stability Index (CSI) for specified feature columns using the Population Stability Index (PSI) function.
+
+    Args:
+        reference_df (pd.DataFrame): DataFrame containing the reference sample.
+        monitored_df (pd.DataFrame): DataFrame containing the monitored sample.
+        feature_columns (List[str]): List of column names for the features to calculate CSI.
+
+    Returns:
+        pd.DataFrame: DataFrame with CSI values for each feature.
+    """
+    csi_values = {}
+    for column in feature_columns:
+        df_psi, csi_value = utils_pd.population_stability_index(
+            reference_df=reference_df, 
+            monitored_df=monitored_df, 
+            reference_prob=column, 
+            monitored_prob=column
+        )
+        csi_values[column] = csi_value
+    csi_df = pd.DataFrame(list(csi_values.items()), columns=['Variable', 'CSI'])
+    return csi_df
     
 #######################################################################################
 
 # Versão Original Ajustada
-import pandas as pd
+import pandas as pd 
 import numpy as np
 from typing import Optional
 
