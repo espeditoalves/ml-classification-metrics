@@ -422,7 +422,7 @@ def characteristic_stability_index(
     """
     csi_values = {}
     for column in feature_columns:
-        df_psi, csi_value = utils_pd.population_stability_index(
+        df_psi, csi_value = population_stability_index(
             reference_df=reference_df, 
             monitored_df=monitored_df, 
             reference_prob=column, 
