@@ -41,7 +41,8 @@ def iv_woe(
     Reference:  https://lucastiagooliveira.github.io/datascience/iv/woe/python/2020/12/15/iv_woe.html      
     Reference: https://www.listendata.com/2015/03/weight-of-evidence-woe-and-information.html
     Reference: https://www.linkedin.com/pulse/information-value-uma-excelente-t%C3%A9cnica-para-de-j%C3%BAlia-de-moura-ertel/
-    Refernce: https://www.analyticsvidhya.com/blog/2021/06/understand-weight-of-evidence-and-information-value/
+    Reference: https://www.analyticsvidhya.com/blog/2021/06/understand-weight-of-evidence-and-information-value/
+    Reference: https://onlinelibrary.wiley.com/doi/10.1155/2013/848271
     """
     
     # Empty Dataframe
