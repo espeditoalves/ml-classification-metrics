@@ -14,6 +14,12 @@
 
 Este repositório tem como objetivo aplicar e analisar **métricas de avaliação de performance** em modelos de classificação, utilizando como base o famoso conjunto de dados **Titanic** (disponível no [Kaggle](https://www.kaggle.com/competitions/titanic)).
 
+<!-- ![Imagem do Titanic](./image/titanic.jpeg) -->
+<p align="center">
+  <img src="./image/titanic.jpeg" alt="Imagem do Titanic" width="500">
+</p>
+
+
 ---
 
 ## 1.1. 📌 Objetivo
